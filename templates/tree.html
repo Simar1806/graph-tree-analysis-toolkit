@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Tree Tools — Graph & Tree Analysis Toolkit{% endblock %}
+{% block content %}
+<div class="container">
+  <div style="padding:2rem 0 0">
+    <h1 style="font-size:1.8rem;font-weight:700"><i class="fas fa-tree" style="color:var(--accent3)"></i> Tree Analysis Tools</h1>
+    <p style="color:var(--muted);margin-top:.4rem">Analyze rooted trees and build Huffman coding trees.</p>
+  </div>
+
+  <div class="tools-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-label">Tree Modules</div>
+      <button class="sidebar-item active" onclick="showTree('analyze')"><i class="fas fa-sitemap"></i> Tree Analysis</button>
+      <button class="sidebar-item" onclick="showTree('huffman')"><i class="fas fa-code"></i> Huffman Coding</button>
+    </aside>
+
+    <div>
+      <!-- ── TREE ANALYSIS ── -->
+      <div id="tree-analyze" class="tool-panel active">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-sitemap"></i> Tree Analysis & Visualization</div>
+          <div class="form-group"><label>Vertices (space separated)</label><input type="text" id="ta-v" placeholder="A B C D E F G"/></div>
+          <div class="form-group"><label>Edges (one per line, e.g. A-B)</label><textarea id="ta-e" rows="6" placeholder="A-B&#10;A-C&#10;B-D&#10;B-E&#10;C-F&#10;C-G"></textarea></div>
+          <div class="form-group"><label>Root Node</label><input type="text" id="ta-root" placeholder="A"/></div>
+          <div style="margin-bottom:1rem">
+            <button class="btn btn-secondary" style="font-size:.82rem;padding:.4rem .9rem" onclick="loadTreeExample()"><i class="fas fa-lightbulb"></i> Load Example</button>
+          </div>
+          <button class="btn btn-green" onclick="runTreeAnalyze()"><i class="fas fa-play"></i> Analyze Tree</button>
+          <div id="ta-result"></div>
+        </div>
+      </div>
+
+      <!-- ── HUFFMAN ── -->
+      <div id="tree-huffman" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-code"></i> Huffman Coding</div>
+          <p style="color:var(--muted);font-size:.88rem;margin-bottom:1rem">Enter character and frequency pairs, one per line.</p>
+          <div class="form-group">
+            <label>Characters &amp; Frequencies</label>
+            <textarea id="huf-in" rows="8" placeholder="A 5&#10;B 9&#10;C 12&#10;D 13&#10;E 16&#10;F 45"></textarea>
+          </div>
+          <div style="margin-bottom:1rem">
+            <button class="btn btn-secondary" style="font-size:.82rem;padding:.4rem .9rem" onclick="loadHuffmanExample()"><i class="fas fa-lightbulb"></i> Load Example</button>
+          </div>
+          <button class="btn btn-green" onclick="runHuffman()"><i class="fas fa-play"></i> Build Huffman Tree</button>
+          <div id="huf-result"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTree(id) {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tree-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function loading(id) {
+  document.getElementById(id).innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted)"><span class="spinner"></span><span style="margin-left:.75rem">Processing...</span></div>`;
+}
+
+function showError(id, msg) {
+  document.getElementById(id).innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
+}
+
+function statCards(items) {
+  return `<div class="stat-grid">${items.map(([k,v])=>`<div class="stat-card"><div class="val">${v}</div><div class="key">${k}</div></div>`).join('')}</div>`;
+}
+
+async function api(ep, body) {
+  const r = await fetch(ep, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+
+function loadTreeExample() {
+  document.getElementById('ta-v').value = 'A B C D E F G';
+  document.getElementById('ta-e').value = 'A-B\nA-C\nB-D\nB-E\nC-F\nC-G';
+  document.getElementById('ta-root').value = 'A';
+}
+
+function loadHuffmanExample() {
+  document.getElementById('huf-in').value = 'A 5\nB 9\nC 12\nD 13\nE 16\nF 45';
+}
+
+async function runTreeAnalyze() {
+  loading('ta-result');
+  const d = await api('/api/tree/analyze', {
+    vertices: document.getElementById('ta-v').value,
+    edges: document.getElementById('ta-e').value,
+    root: document.getElementById('ta-root').value.trim()
+  });
+  if (!d.success) return showError('ta-result', d.error);
+
+  const childHtml = Object.entries(d.children).map(([n, ch]) =>
+    `<div style="margin:.3rem 0;font-size:.85rem"><span style="color:var(--accent);font-weight:700">${n}</span>: ${ch.length ? ch.join(', ') : '<em style="color:var(--muted)">leaf</em>'}</div>`
+  ).join('');
+
+  const parentHtml = Object.entries(d.parents).map(([n, p]) =>
+    `<div style="margin:.3rem 0;font-size:.85rem"><span style="color:var(--accent3);font-weight:700">${n}</span> → ${p || '<em style="color:var(--warn)">root</em>'}</div>`
+  ).join('');
+
+  document.getElementById('ta-result').innerHTML = `
+    <div style="margin-top:1rem">
+      ${statCards([['Nodes', d.num_nodes], ['Height', d.height], ['Leaves', d.leaves.length], ['Internal', d.internal_nodes.length]])}
+      <div class="two-col" style="margin-top:1rem">
+        <div class="result-box"><div class="label">Children</div>${childHtml}</div>
+        <div class="result-box"><div class="label">Parents</div>${parentHtml}</div>
+      </div>
+      <div style="margin-top:.75rem">
+        <span style="font-size:.82rem;color:var(--muted)">Root: </span><span class="badge badge-yellow">${d.root}</span>
+        &nbsp;
+        <span style="font-size:.82rem;color:var(--muted)">Leaves: </span>${d.leaves.map(l=>`<span class="badge badge-green">${l}</span>`).join(' ')}
+      </div>
+      <img class="result-img" src="data:image/png;base64,${d.image}"/>
+    </div>`;
+}
+
+async function runHuffman() {
+  loading('huf-result');
+  const d = await api('/api/tree/huffman', {input: document.getElementById('huf-in').value});
+  if (!d.success) return showError('huf-result', d.error);
+
+  const codeRows = Object.entries(d.codes).sort((a,b)=>a[1].length-b[1].length).map(([c,code]) =>
+    `<tr>
+      <td style="padding:.4rem .75rem;font-weight:700;color:var(--accent)">${c}</td>
+      <td style="padding:.4rem .75rem;color:var(--text)">${code}</td>
+      <td style="padding:.4rem .75rem;color:var(--muted)">${code.length} bits</td>
+    </tr>`
+  ).join('');
+
+  document.getElementById('huf-result').innerHTML = `
+    <div style="margin-top:1rem">
+      ${statCards([['Symbols', Object.keys(d.codes).length], ['Total Bits', d.total_bits], ['Avg Bits', d.avg_bits]])}
+      <div class="result-box" style="margin-top:1rem">
+        <div class="label">Huffman Codes</div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="text-align:left;padding:.4rem .75rem;color:var(--muted);font-size:.8rem">Char</th>
+            <th style="text-align:left;padding:.4rem .75rem;color:var(--muted);font-size:.8rem">Code</th>
+            <th style="text-align:left;padding:.4rem .75rem;color:var(--muted);font-size:.8rem">Length</th>
+          </tr></thead>
+          <tbody>${codeRows}</tbody>
+        </table>
+      </div>
+      <img class="result-img" src="data:image/png;base64,${d.image}"/>
+    </div>`;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+{% block title %}Graph Tools — Graph & Tree Analysis Toolkit{% endblock %}
+{% block head %}
+<style>
+.page-header {
+  padding: 2rem 1.5rem 0;
+  max-width: 1200px; margin: 0 auto;
+}
+.page-header h1 { font-size: 1.8rem; font-weight: 700; }
+.page-header p { color: var(--muted); margin-top: .4rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1><i class="fas fa-tools" style="color:var(--accent)"></i> Graph Analysis Tools</h1>
+    <p>Select a module from the sidebar. Enter your graph data and run analysis.</p>
+  </div>
+  <div class="tools-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-label">Core</div>
+      <button class="sidebar-item active" onclick="showTool('properties')"><i class="fas fa-info-circle"></i> Graph Properties</button>
+      <button class="sidebar-item" onclick="showTool('path')"><i class="fas fa-search"></i> Path Existence</button>
+      <button class="sidebar-item" onclick="showTool('subgraph')"><i class="fas fa-code-branch"></i> Subgraph</button>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-label">Walk & Paths</div>
+      <button class="sidebar-item" onclick="showTool('euler')"><i class="fas fa-redo-alt"></i> Eulerian Walk</button>
+      <button class="sidebar-item" onclick="showTool('hamilton')"><i class="fas fa-route"></i> Hamiltonian Path</button>
+      <button class="sidebar-item" onclick="showTool('shortest')"><i class="fas fa-map-signs"></i> Shortest Path</button>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-label">Coloring</div>
+      <button class="sidebar-item" onclick="showTool('coloring')"><i class="fas fa-palette"></i> Graph Coloring</button>
+      <button class="sidebar-item" onclick="showTool('mapcolor')"><i class="fas fa-map"></i> Map Coloring</button>
+      <div class="sidebar-sep"></div>
+      <div class="sidebar-label">Structure</div>
+      <button class="sidebar-item" onclick="showTool('planar')"><i class="fas fa-layer-group"></i> Planar Graph</button>
+      <button class="sidebar-item" onclick="showTool('articulation')"><i class="fas fa-anchor"></i> Articulation Points</button>
+      <button class="sidebar-item" onclick="showTool('biconnected')"><i class="fas fa-circle-nodes"></i> Biconnected</button>
+      <button class="sidebar-item" onclick="showTool('isomorphism')"><i class="fas fa-equals"></i> Isomorphism</button>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <div>
+
+      <!-- ── PROPERTIES ── -->
+      <div id="tool-properties" class="tool-panel active">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-info-circle"></i> Graph Properties</div>
+          <div class="form-group"><label>Vertices (space separated)</label><input type="text" id="prop-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges (one per line, e.g. A-B or A-B 4 for weighted)</label><textarea id="prop-e" rows="6" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A&#10;A-E"></textarea></div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label><input type="checkbox" id="prop-directed"> Directed</label>
+              <label><input type="checkbox" id="prop-weighted"> Weighted</label>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="runProperties()"><i class="fas fa-play"></i> Analyze Graph</button>
+          <div id="prop-result"></div>
+        </div>
+      </div>
+
+      <!-- ── PATH EXISTENCE ── -->
+      <div id="tool-path" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-search"></i> Path Existence</div>
+          <div class="form-group"><label>Vertices (space separated)</label><input type="text" id="path-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges (one per line, e.g. A-B)</label><textarea id="path-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A&#10;A-E"></textarea></div>
+          <div class="two-col">
+            <div class="form-group"><label>Source Vertex</label><input type="text" id="path-src" placeholder="A"/></div>
+            <div class="form-group"><label>Target Vertex</label><input type="text" id="path-dst" placeholder="D"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="runPath()"><i class="fas fa-play"></i> Check Path</button>
+          <div id="path-result"></div>
+        </div>
+      </div>
+
+      <!-- ── SUBGRAPH ── -->
+      <div id="tool-subgraph" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-code-branch"></i> Subgraph</div>
+          <div class="form-group"><label>All Vertices</label><input type="text" id="sg-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>All Edges</label><textarea id="sg-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A&#10;A-E"></textarea></div>
+          <div class="form-group"><label>Subgraph Vertices (subset)</label><input type="text" id="sg-sub" placeholder="A B C"/></div>
+          <button class="btn btn-primary" onclick="runSubgraph()"><i class="fas fa-play"></i> Extract Subgraph</button>
+          <div id="sg-result"></div>
+        </div>
+      </div>
+
+      <!-- ── EULER ── -->
+      <div id="tool-euler" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-redo-alt"></i> Eulerian Walk</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="euler-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges</label><textarea id="euler-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A&#10;A-E&#10;E-C"></textarea></div>
+          <button class="btn btn-primary" onclick="runEuler()"><i class="fas fa-play"></i> Detect Eulerian Walk</button>
+          <div id="euler-result"></div>
+        </div>
+      </div>
+
+      <!-- ── HAMILTON ── -->
+      <div id="tool-hamilton" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-route"></i> Hamiltonian Path / Cycle</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="ham-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges</label><textarea id="ham-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-E&#10;E-A&#10;A-C"></textarea></div>
+          <button class="btn btn-primary" onclick="runHamilton()"><i class="fas fa-play"></i> Detect Hamiltonian</button>
+          <div id="ham-result"></div>
+        </div>
+      </div>
+
+      <!-- ── SHORTEST PATH ── -->
+      <div id="tool-shortest" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-map-signs"></i> Shortest Path — Dijkstra</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="sp-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges (weighted: A-B 4)</label><textarea id="sp-e" rows="5" placeholder="A-B 4&#10;B-C 3&#10;C-D 2&#10;A-D 10&#10;B-D 5"></textarea></div>
+          <div class="form-group"><div class="checkbox-group"><label><input type="checkbox" id="sp-weighted" checked> Weighted</label></div></div>
+          <div class="two-col">
+            <div class="form-group"><label>Source</label><input type="text" id="sp-src" placeholder="A"/></div>
+            <div class="form-group"><label>Destination</label><input type="text" id="sp-dst" placeholder="D"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="runShortest()"><i class="fas fa-play"></i> Find Shortest Path</button>
+          <div id="sp-result"></div>
+        </div>
+      </div>
+
+      <!-- ── COLORING ── -->
+      <div id="tool-coloring" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-palette"></i> Graph Coloring</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="col-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges</label><textarea id="col-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A&#10;A-C"></textarea></div>
+          <button class="btn btn-primary" onclick="runColoring()"><i class="fas fa-play"></i> Color Graph</button>
+          <div id="col-result"></div>
+        </div>
+      </div>
+
+      <!-- ── MAP COLORING ── -->
+      <div id="tool-mapcolor" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-map"></i> Map Coloring</div>
+          <p style="color:var(--muted);font-size:.88rem;margin-bottom:1rem">Regions as vertices, shared borders as edges.</p>
+          <div class="form-group"><label>Regions (vertices)</label><input type="text" id="mc-v" placeholder="A B C D E F"/></div>
+          <div class="form-group"><label>Borders (edges)</label><textarea id="mc-e" rows="5" placeholder="A-B&#10;A-C&#10;B-C&#10;B-D&#10;C-D&#10;C-E&#10;D-E&#10;D-F&#10;E-F"></textarea></div>
+          <button class="btn btn-primary" onclick="runMapColor()"><i class="fas fa-play"></i> Color Map</button>
+          <div id="mc-result"></div>
+        </div>
+      </div>
+
+      <!-- ── PLANAR ── -->
+      <div id="tool-planar" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-layer-group"></i> Planar Graph Checker</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="pln-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges</label><textarea id="pln-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A&#10;A-C&#10;B-D"></textarea></div>
+          <button class="btn btn-primary" onclick="runPlanar()"><i class="fas fa-play"></i> Check Planarity</button>
+          <div id="pln-result"></div>
+        </div>
+      </div>
+
+      <!-- ── ARTICULATION ── -->
+      <div id="tool-articulation" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-anchor"></i> Articulation Points & Bridges</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="art-v" placeholder="A B C D E F"/></div>
+          <div class="form-group"><label>Edges</label><textarea id="art-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-E&#10;B-D&#10;A-F"></textarea></div>
+          <button class="btn btn-primary" onclick="runArticulation()"><i class="fas fa-play"></i> Find Articulation Points</button>
+          <div id="art-result"></div>
+        </div>
+      </div>
+
+      <!-- ── BICONNECTED ── -->
+      <div id="tool-biconnected" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-circle-nodes"></i> Biconnected Components</div>
+          <div class="form-group"><label>Vertices</label><input type="text" id="bic-v" placeholder="A B C D E"/></div>
+          <div class="form-group"><label>Edges</label><textarea id="bic-e" rows="5" placeholder="A-B&#10;B-C&#10;C-D&#10;D-E&#10;B-D&#10;A-C"></textarea></div>
+          <button class="btn btn-primary" onclick="runBiconnected()"><i class="fas fa-play"></i> Find Components</button>
+          <div id="bic-result"></div>
+        </div>
+      </div>
+
+      <!-- ── ISOMORPHISM ── -->
+      <div id="tool-isomorphism" class="tool-panel">
+        <div class="card">
+          <div class="section-title"><i class="fas fa-equals"></i> Graph Isomorphism</div>
+          <div class="two-col">
+            <div>
+              <div class="form-group"><label>Graph 1 — Vertices</label><input type="text" id="iso-v1" placeholder="A B C D"/></div>
+              <div class="form-group"><label>Graph 1 — Edges</label><textarea id="iso-e1" rows="4" placeholder="A-B&#10;B-C&#10;C-D&#10;D-A"></textarea></div>
+            </div>
+            <div>
+              <div class="form-group"><label>Graph 2 — Vertices</label><input type="text" id="iso-v2" placeholder="W X Y Z"/></div>
+              <div class="form-group"><label>Graph 2 — Edges</label><textarea id="iso-e2" rows="4" placeholder="W-X&#10;X-Y&#10;Y-Z&#10;Z-W"></textarea></div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="runIsomorphism()"><i class="fas fa-play"></i> Check Isomorphism</button>
+          <div id="iso-result"></div>
+        </div>
+      </div>
+
+    </div><!-- end main -->
+  </div><!-- end layout -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTool(id) {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── Helpers ──
+function loading(id) {
+  document.getElementById(id).innerHTML = `<div style="text-align:center;padding:2rem;color:var(--muted)">
+    <span class="spinner"></span><span style="margin-left:.75rem">Analyzing...</span></div>`;
+}
+
+function showError(id, msg) {
+  document.getElementById(id).innerHTML = `<div class="alert alert-error"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
+}
+
+function showImg(id, img, extra='') {
+  document.getElementById(id).innerHTML = extra + `<img class="result-img" src="data:image/png;base64,${img}"/>`;
+}
+
+async function api(endpoint, body) {
+  const r = await fetch(endpoint, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+function badge(val, trueClass='badge-green', falseClass='badge-red') {
+  const cls = val ? trueClass : falseClass;
+  const txt = val ? 'Yes' : 'No';
+  return `<span class="badge ${cls}">${txt}</span>`;
+}
+
+function statCards(items) {
+  return `<div class="stat-grid">${items.map(([k,v])=>`
+    <div class="stat-card"><div class="val">${v}</div><div class="key">${k}</div></div>`).join('')}</div>`;
+}
+
+// ── Properties ──
+async function runProperties() {
+  loading('prop-result');
+  const d = await api('/api/graph/properties', {
+    vertices: document.getElementById('prop-v').value,
+    edges: document.getElementById('prop-e').value,
+    directed: document.getElementById('prop-directed').checked,
+    weighted: document.getElementById('prop-weighted').checked
+  });
+  if (!d.success) return showError('prop-result', d.error);
+
+  let degHtml = '<div class="result-box"><div class="label">Degree of Each Vertex</div>';
+  for (const [k,v] of Object.entries(d.degrees)) {
+    degHtml += `<div style="margin:.3rem 0;font-size:.88rem">${k} <span style="color:var(--accent);font-weight:700">${v}</span></div>`;
+  }
+  degHtml += '</div>';
+
+  const infoCards = statCards([
+    ['Vertices', d.num_vertices],
+    ['Edges', d.num_edges],
+    ['Components', d.components],
+    ['Connected', d.connected ? '✓' : '✗'],
+    ['Has Cycle', d.has_cycle ? '✓' : '✗']
+  ]);
+
+  document.getElementById('prop-result').innerHTML = `
+    <div style="margin-top:1rem">${infoCards}</div>
+    <div style="margin-top:1rem">${degHtml}</div>
+    <img class="result-img" src="data:image/png;base64,${d.image}"/>`;
+}
+
+// ── Path ──
+async function runPath() {
+  loading('path-result');
+  const d = await api('/api/graph/path', {
+    vertices: document.getElementById('path-v').value,
+    edges: document.getElementById('path-e').value,
+    source: document.getElementById('path-src').value.trim(),
+    target: document.getElementById('path-dst').value.trim()
+  });
+  if (!d.success) return showError('path-result', d.error);
+  const extra = `<div class="alert ${d.exists ? 'alert-success' : 'alert-error'}" style="margin-top:1rem">
+    <i class="fas fa-${d.exists ? 'check-circle' : 'times-circle'}"></i>
+    Path ${d.exists ? 'Exists: ' + d.path.join(' → ') : 'Does Not Exist'}</div>`;
+  showImg('path-result', d.image, extra);
+}
+
+// ── Subgraph ──
+async function runSubgraph() {
+  loading('sg-result');
+  const d = await api('/api/graph/subgraph', {
+    vertices: document.getElementById('sg-v').value,
+    edges: document.getElementById('sg-e').value,
+    sub_nodes: document.getElementById('sg-sub').value
+  });
+  if (!d.success) return showError('sg-result', d.error);
+  showImg('sg-result', d.image, `<div class="alert alert-success" style="margin-top:1rem"><i class="fas fa-check-circle"></i> Subgraph Edges: ${d.edges.map(e=>e.join('-')).join(', ')}</div>`);
+}
+
+// ── Euler ──
+async function runEuler() {
+  loading('euler-result');
+  const d = await api('/api/graph/eulerian', {
+    vertices: document.getElementById('euler-v').value,
+    edges: document.getElementById('euler-e').value
+  });
+  if (!d.success) return showError('euler-result', d.error);
+
+  const cls = d.euler_type === 'Not Eulerian' ? 'badge-red' : 'badge-green';
+  const extra = `<div style="margin-top:1rem">
+    <span class="badge ${cls}" style="font-size:.9rem;padding:.4rem 1rem">${d.euler_type}</span>
+    ${d.path.length ? `<div class="result-box" style="margin-top:.75rem"><div class="label">Path</div>${d.path.join(' → ')}</div>` : ''}
+    ${d.odd_degree_vertices.length ? `<div style="margin-top:.5rem;font-size:.85rem;color:var(--muted)">Odd-degree vertices: <strong style="color:var(--warn)">${d.odd_degree_vertices.join(', ')}</strong></div>` : ''}
+  </div>`;
+  showImg('euler-result', d.image, extra);
+}
+
+// ── Hamilton ──
+async function runHamilton() {
+  loading('ham-result');
+  const d = await api('/api/graph/hamiltonian', {
+    vertices: document.getElementById('ham-v').value,
+    edges: document.getElementById('ham-e').value
+  });
+  if (!d.success) return showError('ham-result', d.error);
+
+  const cls = d.result_type !== 'None Found' ? 'badge-green' : 'badge-red';
+  const extra = `<div style="margin-top:1rem">
+    <span class="badge ${cls}" style="font-size:.9rem;padding:.4rem 1rem">${d.result_type}</span>
+    ${d.cycle ? `<div class="result-box" style="margin-top:.75rem"><div class="label">Hamiltonian Cycle</div>${d.cycle.join(' → ')}</div>` : ''}
+    ${d.path && !d.cycle ? `<div class="result-box" style="margin-top:.75rem"><div class="label">Hamiltonian Path</div>${d.path.join(' → ')}</div>` : ''}
+  </div>`;
+  showImg('ham-result', d.image, extra);
+}
+
+// ── Shortest ──
+async function runShortest() {
+  loading('sp-result');
+  const d = await api('/api/graph/shortest', {
+    vertices: document.getElementById('sp-v').value,
+    edges: document.getElementById('sp-e').value,
+    source: document.getElementById('sp-src').value.trim(),
+    target: document.getElementById('sp-dst').value.trim(),
+    weighted: document.getElementById('sp-weighted').checked
+  });
+  if (!d.success) return showError('sp-result', d.error);
+
+  const extra = `<div style="margin-top:1rem">
+    ${statCards([['Path', d.path_str], ['Distance', d.distance]])}
+  </div>`;
+  showImg('sp-result', d.image, extra);
+}
+
+// ── Coloring ──
+async function runColoring() {
+  loading('col-result');
+  const d = await api('/api/graph/coloring', {
+    vertices: document.getElementById('col-v').value,
+    edges: document.getElementById('col-e').value
+  });
+  if (!d.success) return showError('col-result', d.error);
+
+  const palette = {Red:'#ef4444',Blue:'#3b82f6',Green:'#22c55e',Yellow:'#eab308',
+                   Purple:'#a855f7',Cyan:'#06b6d4',Pink:'#ec4899',Lime:'#84cc16'};
+  let chips = '<div class="color-list">' +
+    Object.entries(d.coloring).map(([n,c]) =>
+      `<span class="color-chip" style="background:${palette[c]||'#888'}22;color:${palette[c]||'#888'};border:1px solid ${palette[c]||'#888'}55">${n}: ${c}</span>`
+    ).join('') + '</div>';
+
+  const extra = `<div style="margin-top:1rem">
+    ${statCards([['χ(G)', d.chromatic_number + ' colors']])}
+    ${chips}
+  </div>`;
+  showImg('col-result', d.image, extra);
+}
+
+// ── Map Color ──
+async function runMapColor() {
+  loading('mc-result');
+  const d = await api('/api/graph/mapcolor', {
+    vertices: document.getElementById('mc-v').value,
+    edges: document.getElementById('mc-e').value
+  });
+  if (!d.success) return showError('mc-result', d.error);
+
+  const palette = {Red:'#ef4444',Blue:'#3b82f6',Green:'#22c55e',Yellow:'#eab308',Purple:'#a855f7',Cyan:'#06b6d4'};
+  let chips = '<div class="color-list">' +
+    Object.entries(d.coloring).map(([n,c]) =>
+      `<span class="color-chip" style="background:${palette[c]||'#888'}22;color:${palette[c]||'#888'};border:1px solid ${palette[c]||'#888'}55">${n}: ${c}</span>`
+    ).join('') + '</div>';
+
+  const extra = `<div style="margin-top:1rem">
+    ${statCards([['Colors Used', d.num_colors]])}
+    ${chips}
+  </div>`;
+  showImg('mc-result', d.image, extra);
+}
+
+// ── Planar ──
+async function runPlanar() {
+  loading('pln-result');
+  const d = await api('/api/graph/planar', {
+    vertices: document.getElementById('pln-v').value,
+    edges: document.getElementById('pln-e').value
+  });
+  if (!d.success) return showError('pln-result', d.error);
+
+  const extra = `<div style="margin-top:1rem">
+    <span class="badge ${d.is_planar ? 'badge-green':'badge-red'}" style="font-size:.95rem;padding:.45rem 1.25rem">
+      Planar: ${d.is_planar ? 'Yes ✓' : 'No ✗'}</span>
+    ${statCards([['Vertices', d.vertices], ['Edges', d.edges], ["Euler's Formula", d.euler_formula]])}
+  </div>`;
+  showImg('pln-result', d.image, extra);
+}
+
+// ── Articulation ──
+async function runArticulation() {
+  loading('art-result');
+  const d = await api('/api/graph/articulation', {
+    vertices: document.getElementById('art-v').value,
+    edges: document.getElementById('art-e').value
+  });
+  if (!d.success) return showError('art-result', d.error);
+
+  const artList = d.articulation_points.length ?
+    d.articulation_points.map(p => `<span class="badge badge-yellow">${p}</span>`).join(' ') :
+    '<span style="color:var(--muted)">None</span>';
+  const bridgeList = d.bridges.length ?
+    d.bridges.map(b => `<span class="badge badge-red">${b.join('-')}</span>`).join(' ') :
+    '<span style="color:var(--muted)">None</span>';
+
+  const extra = `<div style="margin-top:1rem">
+    <div style="margin-bottom:.75rem"><span style="color:var(--muted);font-size:.85rem">Articulation Points: </span>${artList}</div>
+    <div style="margin-bottom:.75rem"><span style="color:var(--muted);font-size:.85rem">Bridges: </span>${bridgeList}</div>
+  </div>`;
+  showImg('art-result', d.image, extra);
+}
+
+// ── Biconnected ──
+async function runBiconnected() {
+  loading('bic-result');
+  const d = await api('/api/graph/biconnected', {
+    vertices: document.getElementById('bic-v').value,
+    edges: document.getElementById('bic-e').value
+  });
+  if (!d.success) return showError('bic-result', d.error);
+
+  let compHtml = d.components.map((c,i) =>
+    `<div style="margin:.35rem 0;font-size:.85rem;color:var(--muted)">Component ${i+1}: <strong style="color:var(--text)">{${c.join(', ')}}</strong></div>`
+  ).join('');
+
+  const extra = `<div style="margin-top:1rem">
+    ${statCards([['Biconnected Components', d.num_components]])}
+    <div class="result-box" style="margin-top:.75rem">${compHtml}</div>
+  </div>`;
+  showImg('bic-result', d.image, extra);
+}
+
+// ── Isomorphism ──
+async function runIsomorphism() {
+  loading('iso-result');
+  const d = await api('/api/graph/isomorphism', {
+    vertices1: document.getElementById('iso-v1').value,
+    edges1: document.getElementById('iso-e1').value,
+    vertices2: document.getElementById('iso-v2').value,
+    edges2: document.getElementById('iso-e2').value
+  });
+  if (!d.success) return showError('iso-result', d.error);
+
+  const extra = `<div style="margin-top:1rem">
+    <span class="badge ${d.isomorphic ? 'badge-green':'badge-red'}" style="font-size:.95rem;padding:.45rem 1.25rem">
+      Isomorphic: ${d.isomorphic ? 'Yes ✓' : 'No ✗'}</span>
+    ${statCards([['G1 Nodes', d.g1_nodes], ['G1 Edges', d.g1_edges], ['G2 Nodes', d.g2_nodes], ['G2 Edges', d.g2_edges]])}
+  </div>
+  <div class="two-col" style="margin-top:1rem">
+    <img class="result-img" src="data:image/png;base64,${d.image1}"/>
+    <img class="result-img" src="data:image/png;base64,${d.image2}"/>
+  </div>`;
+  document.getElementById('iso-result').innerHTML = extra;
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}About — Graph & Tree Analysis Toolkit{% endblock %}
+{% block head %}
+<style>
+  .about-hero {
+    padding: 5rem 1.5rem 3rem;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(14,165,233,.12) 0%, transparent 70%);
+    text-align: center;
+  }
+  .about-hero h1 { font-size: clamp(2rem,4vw,3rem); font-weight: 700; margin-bottom: 1rem; }
+  .about-hero p { color: var(--muted); max-width: 600px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7; }
+  .about-content { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+  .theory-section { margin-bottom: 3rem; }
+  .theory-section h2 {
+    font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;
+    color: var(--accent); display: flex; align-items: center; gap: .75rem;
+  }
+  .theory-section p { color: var(--muted); line-height: 1.8; margin-bottom: 1rem; }
+  .theory-section ul { color: var(--muted); line-height: 2; padding-left: 1.5rem; }
+  .theory-section ul li::marker { color: var(--accent); }
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(14,165,233,.08), rgba(99,102,241,.08));
+    border: 1px solid rgba(14,165,233,.25); border-radius: 14px; padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .highlight-box h4 { color: var(--accent); font-size: 1rem; margin-bottom: .75rem; font-family: 'Space Mono', monospace; }
+  .highlight-box p { color: var(--text); margin: 0; font-size: .9rem; line-height: 1.7; }
+  .algo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .algo-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem;
+  }
+  .algo-card h4 { font-size: .95rem; margin-bottom: .5rem; color: var(--text); }
+  .algo-card p { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+  .complexity { font-family: 'Space Mono', monospace; font-size: .78rem; color: var(--warn); margin-top: .5rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="about-hero">
+  <h1>About This Project</h1>
+  <p>A deep dive into Graph Theory and Trees from a Discrete Mathematics perspective, with interactive implementations.</p>
+</div>
+<div class="about-content">
+
+  <div class="theory-section">
+    <h2><i class="fas fa-project-diagram"></i> Graph Theory</h2>
+    <p>Graph Theory is a branch of mathematics that studies the properties of graphs — mathematical structures used to model pairwise relations between objects. A graph <em>G = (V, E)</em> consists of a set of <strong>vertices</strong> (nodes) <em>V</em> and a set of <strong>edges</strong> <em>E</em> connecting pairs of vertices.</p>
+    <div class="highlight-box">
+      <h4>Key Definitions</h4>
+      <p><strong>Degree:</strong> The number of edges incident to a vertex. In a directed graph, vertices have in-degree and out-degree.<br/>
+      <strong>Path:</strong> A sequence of vertices with edges between consecutive vertices, with no repeated vertices.<br/>
+      <strong>Cycle:</strong> A closed path — starts and ends at the same vertex.<br/>
+      <strong>Connected Graph:</strong> A graph where there is a path between every pair of vertices.</p>
+    </div>
+    <p>Graphs can be:</p>
+    <ul>
+      <li><strong>Directed (Digraphs):</strong> Edges have direction from one vertex to another.</li>
+      <li><strong>Undirected:</strong> Edges connect two vertices without direction.</li>
+      <li><strong>Weighted:</strong> Each edge carries a numeric value (cost, distance, etc.).</li>
+      <li><strong>Simple:</strong> No self-loops or multiple edges between the same vertices.</li>
+    </ul>
+  </div>
+
+  <div class="theory-section">
+    <h2><i class="fas fa-route"></i> Euler & Hamilton</h2>
+    <p><strong>Eulerian Path/Circuit</strong> — Named after Leonhard Euler's 1736 solution to the Seven Bridges of Königsberg problem, this is the first theorem in graph theory.</p>
+    <div class="highlight-box">
+      <h4>Euler's Rules</h4>
+      <p>
+        <strong>Eulerian Circuit:</strong> Exists iff the graph is connected and every vertex has even degree.<br/>
+        <strong>Eulerian Path:</strong> Exists iff the graph is connected and exactly two vertices have odd degree (start and end points).<br/>
+        <strong>Not Eulerian:</strong> More than two vertices with odd degree.
+      </p>
+    </div>
+    <p><strong>Hamiltonian Path/Cycle</strong> — A path (or cycle) that visits every vertex exactly once. Unlike Euler, no simple polynomial-time algorithm is known (it is NP-complete).</p>
+  </div>
+
+  <div class="theory-section">
+    <h2><i class="fas fa-map-marked-alt"></i> Shortest Paths</h2>
+    <p>Dijkstra's Algorithm (1959) finds the shortest path from a source vertex to all other vertices in a weighted graph with non-negative weights. It uses a greedy approach with a priority queue.</p>
+    <div class="highlight-box">
+      <h4>Dijkstra Algorithm — Steps</h4>
+      <p>1. Set distance to source = 0, all others = ∞<br/>
+      2. Visit the unvisited vertex with minimum distance<br/>
+      3. Update distances of adjacent vertices via relaxation<br/>
+      4. Repeat until destination is reached</p>
+    </div>
+  </div>
+
+  <div class="theory-section">
+    <h2><i class="fas fa-palette"></i> Graph Coloring</h2>
+    <p>Graph coloring assigns colors to vertices such that no two adjacent vertices share the same color. The minimum number of colors needed is the <strong>chromatic number χ(G)</strong>.</p>
+    <p>Applications: register allocation in compilers, scheduling, map coloring (Four Color Theorem states any planar map needs at most 4 colors).</p>
+  </div>
+
+  <div class="theory-section">
+    <h2><i class="fas fa-tree"></i> Trees</h2>
+    <p>A tree is a connected, acyclic undirected graph. Key properties: a tree with <em>n</em> vertices has exactly <em>n-1</em> edges; there is exactly one path between any two vertices.</p>
+    <ul>
+      <li><strong>Rooted Tree:</strong> One vertex is designated the root; defines parent-child relationships.</li>
+      <li><strong>Leaf:</strong> A vertex with no children (degree 1 in unrooted tree).</li>
+      <li><strong>Height:</strong> Length of the longest path from root to a leaf.</li>
+      <li><strong>Huffman Tree:</strong> An optimal prefix-free binary tree for data compression.</li>
+    </ul>
+  </div>
+
+  <div class="theory-section">
+    <h2><i class="fas fa-cogs"></i> Algorithms Implemented</h2>
+    <div class="algo-grid">
+      <div class="algo-card"><h4>Dijkstra's</h4><p>Single-source shortest path for weighted graphs.</p><div class="complexity">O((V+E) log V)</div></div>
+      <div class="algo-card"><h4>Eulerian Path</h4><p>Hierholzer's algorithm for Euler circuits/paths.</p><div class="complexity">O(E)</div></div>
+      <div class="algo-card"><h4>Hamiltonian</h4><p>Backtracking search for Hamiltonian paths/cycles.</p><div class="complexity">O(N!)</div></div>
+      <div class="algo-card"><h4>Greedy Coloring</h4><p>Largest-first greedy graph coloring.</p><div class="complexity">O(V² + E)</div></div>
+      <div class="algo-card"><h4>Boyer-Myrvold</h4><p>Linear-time planarity testing algorithm.</p><div class="complexity">O(V)</div></div>
+      <div class="algo-card"><h4>Tarjan's</h4><p>Articulation points and biconnected components.</p><div class="complexity">O(V + E)</div></div>
+      <div class="algo-card"><h4>Huffman Coding</h4><p>Optimal prefix codes via min-heap.</p><div class="complexity">O(N log N)</div></div>
+      <div class="algo-card"><h4>Isomorphism</h4><p>VF2 algorithm for graph isomorphism testing.</p><div class="complexity">O(N!)</div></div>
+    </div>
+  </div>
+
+  <div class="theory-section">
+    <h2><i class="fas fa-graduation-cap"></i> About This Project</h2>
+    <p>This <strong>Graph and Tree Analysis Toolkit</strong> is built as a Discrete Mathematics project for B.Tech Computer Science (AI & ML). It demonstrates the practical application of graph theory algorithms using Python (NetworkX), Flask, and interactive browser-based visualization.</p>
+    <p>The backend uses <strong>NetworkX</strong> — a powerful Python library for graph analysis — combined with <strong>Matplotlib</strong> for visualization. The frontend uses modern HTML5/CSS3 for a professional, responsive interface.</p>
+  </div>
+
+</div>
+{% endblock %}
